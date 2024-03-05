@@ -3,10 +3,15 @@
   session_start();
 if(!isset($_SESSION['admin_ID'])){
   header('location: '. ROOT_URL .'admin/login.php');
+  
 }
   //fetch categories from database
   $query = "SELECT * FROM category";
-  $categories = mysqli_query($connection, $query);
+  //$categories = mysqli_query($connection, $query);
+
+  $stmt = mysqli_prepare($connection, $query); // use prepared statements 
+  mysqli_stmt_execute($stmt);
+  $categories = mysqli_stmt_get_result($stmt);
 
   //get back form data if invalid post
   $vBrand = $_SESSION['add-vehicle-post-data']['vBrand'] ?? null;
