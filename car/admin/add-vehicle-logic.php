@@ -3,6 +3,7 @@ require 'config/database.php';
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
+session_start();
 
 if (isset($_POST['submit'])) {
     $CategoryID = filter_var($_POST['CategoryID'], FILTER_SANITIZE_NUMBER_INT);
@@ -58,13 +59,24 @@ if (isset($_POST['submit'])) {
     }
 
     // Insert vehicle post into the database
-    $query = "INSERT INTO `vehicle` (`vImage`, `CategoryID`, `vBrand`, `vModel`, `vPLNo`, `RatePerDay`, `Availability`) VALUES ('$vImage_name', $CategoryID, '$vBrand', '$vModel', '$vPLNo', $RatePerDay, '$Availability')";
+   /*  $query = "INSERT INTO `vehicle` (`vImage`, `CategoryID`, `vBrand`, `vModel`, `vPLNo`, `RatePerDay`, `Availability`) VALUES ('$vImage_name', $CategoryID, '$vBrand', '$vModel', '$vPLNo', $RatePerDay, '$Availability')";
     $result = mysqli_query($connection, $query);
 
     if (!mysqli_errno($connection)) {
         $_SESSION['add-vehicle-post-success'] = "New post added successfully";
         header('location: ' . ROOT_URL . 'admin/');
         die();
+    } */
+    $query = "INSERT INTO `vehicle` (`vImage`, `CategoryID`, `vBrand`, `vModel`, `vPLNo`, `RatePerDay`, `Availability`) VALUES (?, ?, ?, ?, ?, ?, ?)";
+    $stmt = mysqli_prepare($connection, $query);
+    mysqli_stmt_bind_param($stmt, "sissdis", $vImage_name, $CategoryID, $vBrand, $vModel, $vPLNo, $RatePerDay, $Availability);
+    
+    if (mysqli_stmt_execute($stmt)) {
+        $_SESSION['add-vehicle-post-success'] = "New post added successfully";
+        header('location: ' . ROOT_URL . 'admin/');
+        die();
+    } else {
+        $_SESSION['add-vehicle-post'] = "Error occurred while adding the post.";
     }
 }
 
