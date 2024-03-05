@@ -1,5 +1,5 @@
 <?php
-include 'partials/cheader.php';
+include 'partials/ccheader.php';
 session_start();
 if(!isset($_SESSION['customer_ID'])){
   header("Location: signin.php");
@@ -26,11 +26,60 @@ if(!isset($_SESSION['customer_ID'])){
       <h2>Change Password</h2>
     <form action="change-password.php" method="POST" enctype="multipart/form-data">
         <label for="currentP">Current Password</label>
-            <input type="password" name="currentP" placeholder="Current Password">
-        <label for="currentP">New Password</label>
-            <input type="password" name="newP" placeholder="New Password">
-        <label for="currentP">Confirm New Password</label>
-            <input type="password" name="newP2" placeholder="Confirm New Password">      
+        <input type="password" name="currentP" id="currentP" placeholder="Current Password" required>
+        <label for="newP">New Password</label>
+        <div class="password-container">
+          <input type="password" name="newP" id="newP" placeholder="New Password" required>
+          <button type="button" class="toggle-password" onclick="togglePassword('newP')">Show</button>
+        </div>
+        <label for="newP2">Confirm New Password</label>
+        <div class="password-container">
+          <input type="password" name="newP2" id="newP2" placeholder="Confirm New Password" required>
+          <button type="button" class="toggle-password" onclick="togglePassword('newP2')">Show</button>
+        </div>   
+        <script>
+          // Function to toggle password visibility
+          function togglePassword(fieldId) {
+            var passwordField = document.getElementById(fieldId);
+            var fieldType = passwordField.getAttribute('type');
+
+            if (fieldType === 'password') {
+              passwordField.setAttribute('type', 'text');
+              event.target.textContent = 'Hide';
+            } else {
+              passwordField.setAttribute('type', 'password');
+              event.target.textContent = 'Show';
+            }
+          }
+
+          // Client-side validation for password length and match
+          document.getElementById("passwordForm").addEventListener("submit", function(event) {
+            var newPassword = document.getElementById("newP").value;
+            var confirmPassword = document.getElementById("newP2").value;
+            var passwordMatchError = document.getElementById("passwordMatchError");
+
+            if (newPassword.length < 8) {
+              alert("New Password must be at least 8 characters long.");
+              event.preventDefault(); // Prevent form submission
+            } else if (newPassword !== confirmPassword) {
+              passwordMatchError.style.display = "block";
+              event.preventDefault(); // Prevent form submission
+            }
+          });
+
+          // Check password match on keyup
+          document.getElementById("newP2").addEventListener("keyup", function() {
+            var newPassword = document.getElementById("newP").value;
+            var confirmPassword = this.value;
+            var passwordMatchError = document.getElementById("passwordMatchError");
+
+            if (newPassword === confirmPassword) {
+              passwordMatchError.style.display = "none";
+            } else {
+              passwordMatchError.style.display = "block";
+            }
+          });
+        </script>
         <button type="submit" name="update-btn" class="btn">Update</button>
     </form>
   </section>
@@ -40,6 +89,7 @@ if(!isset($_SESSION['customer_ID'])){
 <?php
     if(isset($_POST['update-btn'])){
     $cID= $_SESSION['customer_ID'];
+    //input validation
     $currentP=trim($_POST['currentP']);
     $newP=trim($_POST['newP']);
     $newP2=trim($_POST['newP2']);
@@ -65,7 +115,7 @@ if(!isset($_SESSION['customer_ID'])){
             }
           }
         }else{
-          echo '<script>alert("Password does not match");</script>';
+          echo '<script>alert("Incorrect current password. Please try again.");</script>';
         }
     }
     }
