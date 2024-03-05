@@ -4,6 +4,7 @@ if(isset($_SESSION['customer_ID'])){
   header("Location: index.php");
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -24,11 +25,7 @@ if(isset($_SESSION['customer_ID'])){
 <section class="form_section">
   <div class="container form_section-container">
     <h2>Sign Up</h2>
-     <!--<div class="alert_message error">
-    <p>Error Message</p>
-  </div>-->
     
-
   <form class="signup" action="signup.php" method="POST" enctype="multipart/form-data">
     <input type="text" name="fname" placeholder="First Name">
     <input type="text" name="lname" placeholder="Last Name">
@@ -51,48 +48,64 @@ if(isset($_SESSION['customer_ID'])){
 <?php
 require_once 'config/database.php';
 
-//signup data
 if (isset($_POST['sign-up-btn'])){
-  $fname = $_POST['fname'];
-  $lname = $_POST['lname'];
+
+  $fname = trim($_POST['fname']);
+  $lname = trim($_POST['lname']);
   $birthdate = $_POST['birthdate'];
-  $contactNo = $_POST['contactNo'];
-  $email = $_POST['email'];
+  $contactNo = trim($_POST['contactNo']);
+  $email = trim($_POST['email']);
   $password = $_POST['password'];
   $cpassword = $_POST['cpassword'];
 
-  $passwordHash = password_hash($password, PASSWORD_DEFAULT);
+  // Input validation
 
-  //validate input values
   $errors = array();
 
-if (empty($fname) || empty($lname) || empty($birthdate) || empty($contactNo) || empty($email) || empty($password) || empty($cpassword)) {
+  if (empty($fname) || empty($lname) || empty($birthdate) || empty($contactNo) || empty($email) || empty($password) || empty($cpassword)) {
     array_push($errors, "All fields are required");
-}
+  }
 
-if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+  if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
     array_push($errors, "Email not valid");
-}
+  }
 
-if (strlen($password) < 8) {
+  if (strlen($password) < 8) {
     array_push($errors, "Password must be at least 8 characters long");
-}
+  }
 
-if ($password !== $cpassword) {
-    array_push($errors, "Password does not match");
-}
+  if (!preg_match("/[A-Z]/", $password)) {
+    array_push($errors, "Password must contain at least one uppercase letter");
+  }
 
-// Email already exists
-$sql = "SELECT * FROM customer WHERE cEmail = '$email'";
-$result = mysqli_query($connection, $sql);
-$rowCount = mysqli_num_rows($result);
+  if (!preg_match("/[0-9\W]/", $password)) {
+    array_push($errors,"Password must contain at least one symbol or number");
+  }
 
-if ($rowCount > 0) {
-    array_push($errors, "Email already exists!");
-}
+  if ($password !== $cpassword) {
+    array_push($errors, "Passwords do not match");
+  }
 
-// Display errors
-if (count($errors) > 0) {
+  $birthdate_timestamp = strtotime($birthdate);
+  $eighteen_years_ago = strtotime('-18 years');
+
+  if ($birthdate_timestamp > $eighteen_years_ago) {
+    array_push($errors, "Invalid age: You must be 18 years or older to sign up");
+  }
+
+  // Email already exists
+  $sql = "SELECT * FROM customer WHERE cEmail = ?";
+  $stmt = $connection->prepare($sql);
+  $stmt->bind_param("s", $email);
+  $stmt->execute();
+  $result = $stmt->get_result();
+
+  if ($result->num_rows > 0) {
+    array_push($errors,"Email already exists");
+  }
+
+  // Proper error handling
+  if (count($errors) > 0) {
     foreach ($errors as $error) {
         echo '<script>alert("' . $error . '");</script>';
     }
