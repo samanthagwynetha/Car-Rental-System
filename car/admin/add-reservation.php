@@ -50,13 +50,29 @@
             <label for="AdminID">Admin ID:</label>
             <input name="_adminID" class="form-control" value="<?php echo $_SESSION['admin_ID']?>" readonly>
             <label for="ReservationDate">Reservation Date:</label>
-            <input type="date" name="_resdate" class="form-control" required>
-         
+            <input type="date" name="_resdate" class="form-control" required readonly>
+            <script>
+                // Get today's date
+                var today = new Date().toISOString().split('T')[0];
+                // Set the value of the input field to today's date
+                document.getElementsByName("_resdate")[0].value = today;
+            </script>
+                    
             <label for="RentalStartDate">Start Date:</label>
-            <input type="date" name="_startdate" class="form-control" required>
-         
+            <input type="date" name="_startdate" id="_startdate" class="form-control" required onchange="updateMinEndDateSecond()" min="<?php echo date('Y-m-d'); ?>">
+
             <label for="RentalEndDate">End Date:</label>
-            <input type="date" name="_enddate" class="form-control" required>
+            <input type="date" name="_enddate" id="_enddate" class="form-control" required>
+            <script>
+                function updateMinEndDateSecond() {
+                    var startDate = document.getElementById("_startdate").value;
+                    document.getElementById("_enddate").min = startDate;
+                    // Ensure end date is not before start date
+                    if (document.getElementById("_enddate").value < startDate) {
+                        document.getElementById("_enddate").value = startDate;
+                    }
+                }
+            </script>
          
             <div class="form-group" 
             style="color: var(--color-white);">
@@ -194,17 +210,17 @@ if (isset($_POST['submit'])) {
       } else {
         $sql = "INSERT INTO `reservation`(`ReservationID`, `CustomerID`, `VehicleID`, `AdminID`, `ReservationDate`, `RentalStartDate`, `RentalEndDate`, `DriverOption`, `LicensePhoto`, `TotalCost`, `ReservationStatus`) VALUES (null,'$cID','$vID','$aID','$rD','$sD','$eD','$dO','$lP','$tC','$rS')";
         $result = mysqli_query($connection, $sql);
-       
       }
-    //   if ($result) {
-    //     header('Location: manage-reservation.php');
-    //     exit(); 
-    // } else {
-    //     echo '<script>alert("Error adding reservation");</script>';
-    // }
+       if ($result) {
+        echo '<script>alert("Reservation added successfully");</script>';
+         exit(); 
+     } else {
+         echo '<script>alert("Error adding reservation");</script>';
+     }
     }
 }
 ?>
+
 
 
 
